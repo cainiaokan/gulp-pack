@@ -2,7 +2,7 @@
 
 > Pack assets with [Gulp-Pack](https://github.com/cainiaokan/gulp-pack)
 
-*Issues with the output should be reported on the Babel [issue tracker](https://github.com/cainiaokan/gulp-pack/issues).*
+*Issues with the output should be reported on the GulpPack [issue tracker](https://github.com/cainiaokan/gulp-pack/issues).*
 
 ## Install
 ```
