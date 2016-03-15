@@ -36,32 +36,29 @@ gulp.task('default', () =>
 * __entries:__ a glob pattern matches those entrypoints
 
 ## Example
-```
-  var preProcessors = [
+```js
+  const coffee       = require('gulp-coffee');
+  const coffeelint   = require('gulp-coffeelint');
+  const less         = require('gulp-less');
+  const minifyCss    = require('gulp-minify-css');
+  const autoprefixer = require('gulp-autoprefixer');
+  const merge        = require('merge2');
+
+  const preProcessors = [
     gulp.src(paths.coffee, { base: src })
-      .pipe(plumber())
-      .pipe(cache('coffee'))
       .pipe(coffeelint())
       .pipe(coffeelint.reporter())
       .pipe(coffee({ bare: true }))
-      .pipe(uri(pathToCDN))
-      .pipe(remember('coffee'))
-      .pipe(plumber.stop()),
+      .pipe(uri(pathToCDN)),
 
     gulp.src(paths.less, { base: src })
-      .pipe(plumber())
-      .pipe(cache('less'))
       .pipe(less())
-      .pipe(cssCDN(pathToCDN))
       .pipe(autoprefixer({browsers: ['Android > 4', 'iOS > 6'], cascade: false}))
       .pipe(minifyCss({ processImport: false }))
-      .pipe(remember('less'))
-      .pipe(plumber.stop())
   ];
 
   //merge prepreocessor streams into one single stream
   return merge(preProcessors)
-    .pipe(plumber())
     //run optimization
     //parse dependencies and pack each entrypoint and its deps into a single file
     .pipe(pack({
