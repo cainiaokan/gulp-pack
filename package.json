@@ -1,6 +1,6 @@
 {
   "name": "gulp-dep-pack",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "pack assets into a bundle according to entrypoints and their dependencies",
   "main": "index.js",
   "scripts": {
@@ -32,7 +32,6 @@
     "minimatch": "^3.0.0",
     "lodash": "^3.10.1",
     "through2": "^2.0.0",
-    "mocha": "^2.2.5",
     "pre-commit": "^1.0.10",
     "should": "^7.0.2"
   },
