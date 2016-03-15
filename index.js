@@ -2,6 +2,7 @@
 
 var depsParser       = require('./dependencyParser');
 var gutil            = require('gulp-util');
+var PLUGIN_NAME      = 'gulp-pack';
 var minimatch        = require('minimatch');
 var path             = require('path');
 var fs               = require('fs');
@@ -9,20 +10,29 @@ var os               = require('os');
 var _                = require('lodash');
 var through          = require('through2');
 
+var vinylFiles;
+var resourceMap;
+var config                 = {};
+var MODULAR_FILE           = './modular/modular.js';
+var MODULAR_ASYNC_FILE     = './modular/modular_async.js';
+var modularjs              = fs.readFileSync(MODULAR_FILE, {encoding: 'utf-8'});
+var modularjs_async        = fs.readFileSync(MODULAR_ASYNC_FILE, {encoding: 'utf-8'});
+
 var defaultCfg       = {
   baseUrl    : './',
   shim       : {},
   genResDeps : false,
-  entries    : 'app/**/index.js'
+  silent     : false,
+  entries    : '**/index.js'
 };
 
-var vinylFiles;
-var resourceMap;
-var config                 = {};
-var MODULAR_FILE           = './lib/modular.js';
-var MODULAR_ASYNC_FILE     = './lib/modular_async.js';
-var modularjs              = fs.readFileSync(MODULAR_FILE, {encoding: 'utf-8'});
-var modularjs_async        = fs.readFileSync(MODULAR_ASYNC_FILE, {encoding: 'utf-8'});
+function processConf(conf) {
+  var baseUrl = conf.baseUrl;
+  if(baseUrl && baseUrl.charAt(baseUrl.length - 1) !== '/') {
+    conf.baseUrl = baseUrl + '/';
+  }
+  config = _.defaults(conf, defaultCfg);
+}
 
 function writeBundle(moduleId) {
   var vinylFile = vinylFiles[moduleId];
@@ -46,7 +56,7 @@ function writeDeps(moduleId) {
   if(res.isEntry && res.parentModuleId === null) {
     contents = (res.asyncDeps.length ? modularjs_async : modularjs) + 
       os.EOL + writeJsConfig() + contents;
-    //insert require
+    //insert require.
     contents += os.EOL + 'require(\'' + moduleId + '\');' + os.EOL;
   }
   return contents;
@@ -68,32 +78,32 @@ function wrapModuleDef(moduleId){
   var contents     = '';
   var EOL          = os.EOL;
 
-  contents += EOL + 
+  contents += EOL +
     'define(\'' + moduleId + '\', function(require, exports, module){';
   
   if(extname === '.js') {
     contents += EOL + fileContents;
   } else if(extname === '.css') {
     fileContents = fileContents.replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
-    contents += EOL +'var style = document.createElement("style");' + 
-                EOL +'var contents = \'' + fileContents + '\';' +
-                EOL +'style.type = "text/css";' +
-                EOL +'if (style.styleSheet) {' + 
-                EOL +' style.styleSheet.cssText = contents;' +
-                EOL +'} else {' +
-                EOL +' style.innerHTML = contents;' +
-                EOL +'}' + 
-                EOL +'document.getElementsByTagName("head")[0].appendChild(style);';
+    contents += EOL + '  var style = document.createElement("style");' + 
+                EOL + '  var contents = \'' + fileContents + '\';' +
+                EOL + '  style.type = "text/css";' +
+                EOL + '  if (style.styleSheet) {' + 
+                EOL + '    style.styleSheet.cssText = contents;' +
+                EOL + '  } else {' +
+                EOL + '    style.innerHTML = contents;' +
+                EOL + '  }' + 
+                EOL + '  document.getElementsByTagName("head")[0].appendChild(style);';
   } else if(extname === '.json') {
-    contents += EOL + 'return ' + fileContents + ';';
-  } else if(extname === '.tpl') {
-    contents += EOL + 'return _.template(\'' + fileContents.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/>\s+?</g, '><').replace(/\r?\n/g, '\\n') + '\');';
+    contents += EOL + '  return ' + fileContents + ';';
+  } else if(extname === '.tpl' || extname === '.tmpl') {
+    contents += EOL + '  return _.template(\'' + fileContents.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/>\s+?</g, '><').replace(/\r?\n/g, '\\n') + '\');';
   } else {
     throw Error('Unknow file type: ' + vinylFiles.path);
   }
 
   if(res.shim && res.exports) {
-    contents += EOL + 'module.exports = ' + res.exports + ';';
+    contents += EOL + '  module.exports = ' + res.exports + ';';
   }
 
   contents += EOL + '});' + EOL;
@@ -101,73 +111,77 @@ function wrapModuleDef(moduleId){
   return contents;
 }
 
-function newCopy(file) {
-  var copy = new gutil.File({
-    base: file.base,
-    cwd : file.cwd,
-    path: file.path
-  });
-  copy.contents = new Buffer(file.contents);
-  return copy;
-}
-
 module.exports = function pack(conf){
 
   resourceMap = {};
   vinylFiles = {};
-  config = _.defaults(config, conf, defaultCfg);
+
+  processConf(conf);
 
   depsParser.setVinylFiles(vinylFiles);
   depsParser.setConfig(config);
   depsParser.setResourceMap(resourceMap);
 
-  var stream = through.obj(function(file, encoding, callback){    
+  var stream = through.obj(function(file, encoding, cb){    
     var moduleId = file.relative;
-
     if (file.isStream()) {
-      cb(new gutil.PluginError('pack', 'Streaming not supported'));
-      return;
+      return cb(new gutil.PluginError(PLUGIN_NAME, 'Streaming not supported'));
     }
 
-    if(process.platform === 'win32') {
-      moduleId = moduleId.replace(/\\+/g, '/');
+    if (file.isBuffer()) {
+      if(process.platform === 'win32') {
+        moduleId = moduleId.replace(/\\+/g, '/');
+      }
+      //collect files for the following process
+      vinylFiles[moduleId] = file.clone();
+      cb();
     }
+  }, function(cb) {
 
-    vinylFiles[moduleId] = newCopy(file);
-
-    callback();
-
-  }, function(callback) {
-
-    Object.keys(vinylFiles).forEach(function(moduleId){
+    var isErrorExist = false;
+    //parse each entry file. combine it and its deps into a single file.
+    Object.keys(vinylFiles).every(function(moduleId){
+      
       if(minimatch(moduleId, config.entries)){
         try {
+          //parse deps
           depsParser.parse(moduleId);
+          //write as a bundle
           writeBundle(moduleId);
+          return true;
         } catch(ex) {
-          callback(new gutil.PluginError('pack', ex));
+          isErrorExist = true;
+          cb(ex);
+          return false;
         }
+      } else {
+        return true;
       }
+      
     });
 
-    Object.keys(vinylFiles).forEach(function(moduleId){
-      var res = resourceMap[moduleId];
-      if(!res) {
-        stream.push(vinylFiles[moduleId]);
-      } else if(!res.combined) {
-        stream.push(vinylFiles[moduleId]);
-      }
-    });
+    if(!isErrorExist) {
 
-    if(config.genResDeps) {
-      var resourcesJson = new gutil.File({
-        path: 'resource_deps.json'
+      Object.keys(vinylFiles).forEach(function(moduleId){
+        var res = resourceMap[moduleId];
+        if(!res) {
+          stream.push(vinylFiles[moduleId]);
+        } else if(!res.combined) {
+          stream.push(vinylFiles[moduleId]);
+        }
       });
-      resourcesJson.contents = new Buffer(JSON.stringify(resourceMap, null, 2));
-      stream.push(resourcesJson);      
+
+      //generate dependent relations json file.
+      if(config.genResDeps) {
+        var resourcesJson = new gutil.File({
+          path: 'resource_deps.json'
+        });
+        resourcesJson.contents = new Buffer(JSON.stringify(resourceMap, null, 2));
+        stream.push(resourcesJson);      
+      }
+      cb();
     }
 
-    callback();
   });
   
   return stream;

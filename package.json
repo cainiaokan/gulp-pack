@@ -1,0 +1,42 @@
+{
+  "name": "gulp-pack",
+  "version": "0.0.1",
+  "description": "pack assets into a bundle according to entrypoints and their dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha \"test/**/test.js\" -R spec"
+  },
+  "repository": "cainiaokan/gulp-pack",
+  "keywords": [
+    "gulpplugin",
+    "gulp",
+    "pack",
+    "bundle",
+    "dependencies"
+  ],
+  "author": "Louie Lang <cainiaokan@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cainiaokan/gulp-pack/issues"
+  },
+  "homepage": "https://github.com/cainiaokan/gulp-pack",
+  "dependencies": {
+    "gulp-util": "^3.0.1",
+    "through2": "^2.0.0",
+    "minimatch": "^3.0.0",
+    "lodash": "^3.10.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "mocha": "^2.2.5",
+    "minimatch": "^3.0.0",
+    "lodash": "^3.10.1",
+    "through2": "^2.0.0",
+    "mocha": "^2.2.5",
+    "pre-commit": "^1.0.10",
+    "should": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=0.10"
+  }
+}
