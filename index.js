@@ -13,8 +13,8 @@ var through          = require('through2');
 var vinylFiles;
 var resourceMap;
 var config                 = {};
-var MODULAR_FILE           = './modular/modular.js';
-var MODULAR_ASYNC_FILE     = './modular/modular_async.js';
+var MODULAR_FILE           = __dirname + '/modular/modular.js';
+var MODULAR_ASYNC_FILE     = __dirname + '/modular/modular_async.js';
 var modularjs              = fs.readFileSync(MODULAR_FILE, {encoding: 'utf-8'});
 var modularjs_async        = fs.readFileSync(MODULAR_ASYNC_FILE, {encoding: 'utf-8'});
 

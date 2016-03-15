@@ -1,5 +1,5 @@
 {
-  "name": "gulp-pack",
+  "name": "gulp-dep-pack",
   "version": "0.0.1",
   "description": "pack assets into a bundle according to entrypoints and their dependencies",
   "main": "index.js",
