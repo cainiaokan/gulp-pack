@@ -1,4 +1,4 @@
-# gulp-pack [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/pack/gulp-pack)
+# gulp-pack [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack)
 
 > Pack assets with [Gulp-Pack](https://github.com/cainiaokan/gulp-pack)
 
