@@ -89,19 +89,17 @@ function findCommonParent(resource1, resource2) {
   var array2       = [];
   var commonParent = null;
 
-  do {
+  while(true) {
+    if(!resource1) break;
     array1.push(resource1.moduleId);
     resource1 = resourceMap[resource1.parentModuleId];
-  } while(resource1.parentModuleId !== null);
+  }
 
-  array1.push(resource1.moduleId);
-
-  do {
+  while(true) {
+    if(!resource2) break;
     array2.push(resource2.moduleId);
     resource2 = resourceMap[resource2.parentModuleId];
-  } while(resource2.parentModuleId !== null);
-
-  array2.push(resource2.moduleId);
+  }
 
   commonParent = _.intersection(array1, array2)[0];
 
