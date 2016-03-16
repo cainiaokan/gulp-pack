@@ -165,7 +165,6 @@ function conflict (moduleId, parentModuleId, isEntry) {
     commonParent = resourceMap[commonParent]
   }
 
-<<<<<<< HEAD
   // transform the module into a synchronized dep.
   resource.isEntry = false
   resource.parentModuleId = commonParent.moduleId
