@@ -129,7 +129,7 @@ function conflict(moduleId, parentModuleId, isEntry){
   if(entry === curEntry) {
     if(isEntry) {
       if(!resource.isEntry) {
-        if(config.silent) {
+        if(!config.silent) {
           gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parent.moduleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parentModuleId + '".');
         }
       } else {
@@ -146,7 +146,7 @@ function conflict(moduleId, parentModuleId, isEntry){
         });
         //add synchronized dep to current parent module.
         curParent.deps.push(moduleId);
-        if(config.silent) {
+        if(!config.silent) {
           gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parentModuleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parent.moduleId + '".');
         }
       }
@@ -177,7 +177,7 @@ function conflict(moduleId, parentModuleId, isEntry){
   });
   //reset the module as a synchronized module of the common parent.
   commonParent.deps.push(moduleId);
-  if(config.silent) {
+  if(!config.silent) {
     gutil.log('Dependency conflict occurs："' + moduleId + '" is required to be promoted as "' + commonParent.moduleId + '"\'s synchronized dependency.');
   }
 }

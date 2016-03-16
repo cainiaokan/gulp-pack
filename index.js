@@ -99,7 +99,7 @@ function wrapModuleDef(moduleId){
   } else if(extname === '.tpl' || extname === '.tmpl') {
     contents += EOL + '  return _.template(\'' + fileContents.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/>\s+?</g, '><').replace(/\r?\n/g, '\\n') + '\');';
   } else {
-    throw Error('Unknow file type: ' + vinylFiles.path);
+    new gutil.PluginError(PLUGIN_NAME, 'Unknow file type: ' + vinylFiles.path);
   }
 
   if(res.shim && res.exports) {

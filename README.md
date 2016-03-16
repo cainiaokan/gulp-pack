@@ -1,12 +1,12 @@
 # gulp-pack [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack)
 
-> Pack assets with [Gulp-Pack](https://github.com/cainiaokan/gulp-pack)
+> Pack assets with [Gulp-Dep-Pack](https://github.com/cainiaokan/gulp-pack)
 
 *Issues with the output should be reported on the GulpPack [issue tracker](https://github.com/cainiaokan/gulp-pack/issues).*
 
 ## Install
 ```
-$ npm install --save-dev gulp-pack
+$ npm install --save-dev gulp-dep-pack
 ```
 
 ## Usage
@@ -30,10 +30,14 @@ gulp.task('default', () =>
 
 * __baseUrl:__ 
     Specify scripts' base url
-* __shim:__ for non-export modules
-* __genResDeps:__ generate a json file of assets dependencies(resource_deps.json by default)
-* __silent:__ disable logs
-* __entries:__ a glob pattern matches those entrypoints
+* __shim:__
+    for non-export modules
+* __genResDeps:__
+    generate a json file of assets dependencies(resource_deps.json by default)
+* __silent:__
+    disable logs
+* __entries:__
+    a glob pattern matches those entrypoints
 
 ## Example
 ```js
@@ -48,8 +52,7 @@ gulp.task('default', () =>
     gulp.src(paths.coffee, { base: src })
       .pipe(coffeelint())
       .pipe(coffeelint.reporter())
-      .pipe(coffee({ bare: true }))
-      .pipe(uri(pathToCDN)),
+      .pipe(coffee({ bare: true })),
 
     gulp.src(paths.less, { base: src })
       .pipe(less())

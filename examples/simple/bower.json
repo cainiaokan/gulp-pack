@@ -1,0 +1,8 @@
+{
+  "name"            : "lottery",
+  "version"         : "1.0.0",
+  "dependencies"    : {
+    "zepto"         : "^1.1.6",
+    "underscore"    : "^1.8.3"
+  }
+}
