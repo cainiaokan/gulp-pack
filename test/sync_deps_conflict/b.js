@@ -1,7 +1,9 @@
-'use strict';
+'use strict'
 
 exports.get = function () {
-  return module.uri;
+  return module.uri
 }
 
-var c = require('./c');
+var c = require('./c')
+
+c.get()

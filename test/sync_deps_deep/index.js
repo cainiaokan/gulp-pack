@@ -1,3 +1,5 @@
-'use strict';
+'use strict'
 
-var a = require('./a');
+var a = require('./a')
+
+a.get()

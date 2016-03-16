@@ -1,5 +1,5 @@
-'use strict';
+'use strict'
 
 require.async('./a', function (a) {
-  console.log(a.get());
-});
+  console.log(a.get())
+})

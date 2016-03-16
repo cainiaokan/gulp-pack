@@ -1,10 +1,11 @@
 {
   "name": "gulp-dep-pack",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "pack assets into a bundle according to entrypoints and their dependencies",
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"test/**/test.js\" -R spec"
+    "standard": "standard",
+    "test": "mocha \"test/**/test.js\" -R spec --require should"
   },
   "repository": "cainiaokan/gulp-pack",
   "keywords": [
@@ -33,8 +34,13 @@
     "lodash": "^3.10.1",
     "through2": "^2.0.0",
     "pre-commit": "^1.0.10",
+    "standard": "^3.0.0",
     "should": "^7.0.2"
   },
+  "pre-commit": [
+    "standard",
+    "test"
+  ],
   "engines": {
     "node": ">=0.12"
   }

@@ -1,41 +1,42 @@
-var should  = require('should');
-var pack    = require('../../');
-var gulp    = require('gulp');
-var through = require('through2');
+/* eslint-env node, mocha */
 
-describe('gulp-pack', function() {
-  describe('sync deps basic', function() {
-    gulp.task('sync-deps-basic', function() {
+var pack = require('../../')
+var gulp = require('gulp')
+var through = require('through2')
+
+describe('gulp-pack', function () {
+  describe('sync deps basic', function () {
+    gulp.task('sync-deps-basic', function () {
       it('should has right deps', function (done) {
-        var stream = through.obj(function(file, encoding, cb){
-          var resMap = null;
-          var res    = null;
-          
-          if(file.relative === 'resource_deps.json') {
-            resMap = JSON.parse(file.contents.toString());
-            resMap.should.not.be.undefined();
+        var stream = through.obj(function (file, encoding, cb) {
+          var resMap = null
+          var res = null
 
-            res = resMap['index.js'];
-            res.should.not.be.undefined();
-            res.deps.should.match(['a.js', 'b.js']);
+          if (file.relative === 'resource_deps.json') {
+            resMap = JSON.parse(file.contents.toString())
+            resMap.should.not.be.undefined()
 
-            resMap['a.js'].should.not.be.undefined();
+            res = resMap['index.js']
+            res.should.not.be.undefined()
+            res.deps.should.match(['a.js', 'b.js'])
 
-            resMap['b.js'].should.not.be.undefined();
+            resMap['a.js'].should.not.be.undefined()
 
-            done();
+            resMap['b.js'].should.not.be.undefined()
+
+            done()
           }
-          cb();
-        });
+          cb()
+        })
         return gulp.src('test/sync_deps_basic/*.js')
           .pipe(pack({
             baseUrl: '/',
-            genResDeps : true,
-            entries    : 'index.js'
+            genResDeps: true,
+            entries: 'index.js'
           }))
-          .pipe(stream);
-      });
-    });
-    gulp.start('sync-deps-basic');
-  });
-});
+          .pipe(stream)
+      })
+    })
+    gulp.start('sync-deps-basic')
+  })
+})

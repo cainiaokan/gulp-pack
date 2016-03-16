@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
 exports.get = function () {
-  return module.uri;
+  return module.uri
 }
 
 require.async('./c', function (c) {
-  console.log(c.get());
-});
+  console.log(c.get())
+})
