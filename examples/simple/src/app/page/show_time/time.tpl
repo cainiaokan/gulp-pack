@@ -1,0 +1,1 @@
+<h1>Time is <%=time%></h1>

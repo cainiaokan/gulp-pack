@@ -1,0 +1,7 @@
+html, body {
+  font: 16px/1 arial,tahoma,microsoft yahei,sans-serif,sans-serif;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
