@@ -1,5 +1,5 @@
 # gulp-pack 
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/cainiaokan/gulp-pack)[![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack) [![npm version](https://img.shields.io/npm/v/gulp-dep-pack.svg?style=flat-square)](https://www.npmjs.com/package/gulp-dep-pack)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/cainiaokan/gulp-pack) [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack) [![npm version](https://img.shields.io/npm/v/gulp-dep-pack.svg?style=flat-square)](https://www.npmjs.com/package/gulp-dep-pack)
 
 > Pack assets with [Gulp-Dep-Pack](https://github.com/cainiaokan/gulp-pack)
 
