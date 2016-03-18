@@ -1,6 +1,6 @@
 {
   "name": "gulp-dep-pack",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "pack assets into a bundle according to entrypoints and their dependencies",
   "main": "index.js",
   "scripts": {
