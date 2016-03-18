@@ -8,7 +8,7 @@ describe('gulp-pack', function () {
     gulp.task('circular-deps', function () {
       it('should throw error when having circular deps', function (done) {
         var errorHandler = function (err) {
-          err.message.should.startWith('Circular dependency occurs')
+          err.message.should.startWith('Circular dependency occurs：[a.js->b.js->c.js->a.js]')
           done()
         }
         return gulp.src('test/circular_deps/*.js')

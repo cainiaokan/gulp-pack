@@ -81,28 +81,6 @@ function getCircularDep (moduleId, parentModuleId) {
   return null
 }
 
-function findCommonParent (resource1, resource2) {
-  var array1 = []
-  var array2 = []
-  var commonParent = null
-
-  while (true) {
-    if (!resource1) break
-    array1.push(resource1.moduleId)
-    resource1 = resourceMap[resource1.parentModuleId]
-  }
-
-  while (true) {
-    if (!resource2) break
-    array2.push(resource2.moduleId)
-    resource2 = resourceMap[resource2.parentModuleId]
-  }
-
-  commonParent = _.intersection(array1, array2)[0]
-
-  return commonParent
-}
-
 function findBelongingEntry (resource) {
   while (resource && !resource.isEntry) {
     resource = resourceMap[resource.parentModuleId]
@@ -110,24 +88,54 @@ function findBelongingEntry (resource) {
   return resource
 }
 
+function findCommonAncestor (res1, res2) {
+  var array1 = []
+  var array2 = []
+  var commonAncestorId = null
+
+  while (true) {
+    if (!res1) break
+    array1.push(res1.moduleId)
+    res1 = resourceMap[res1.parentModuleId]
+  }
+
+  while (true) {
+    if (!res2) break
+    array2.push(res2.moduleId)
+    res2 = resourceMap[res2.parentModuleId]
+  }
+
+  commonAncestorId = _.intersection(array1, array2)[0]
+
+  return resourceMap[commonAncestorId] || null
+}
+
+function findCommonAncestorEntry (res1, res2) {
+  return findBelongingEntry(findCommonAncestor(res1, res2))
+}
+
 function conflict (moduleId, parentModuleId, isEntry) {
+  var resource = resourceMap[moduleId]
+  if (resource.isEntry && resource.parentModuleId === null) {
+    throw new PluginError(PLUGIN_NAME, 'Can\'t depend on main entry.')
+  }
+
   var circular = getCircularDep(moduleId, parentModuleId)
   if (circular !== null) {
     throw new PluginError(PLUGIN_NAME, 'Circular dependency occurs：[' + circular.join('->') + '], please check your code.')
   }
 
-  var resource = resourceMap[moduleId]
-  var parent = resourceMap[resource.parentModuleId]
-  var curParent = resourceMap[parentModuleId]
-  var entry = findBelongingEntry(parent)
-  var curEntry = findBelongingEntry(curParent)
-  var commonParent
+  var oldParent = resourceMap[resource.parentModuleId]
+  var newParent = resourceMap[parentModuleId]
+  var oldBelongingEntry = findBelongingEntry(oldParent)
+  var newBelongingEntry = findBelongingEntry(newParent)
+  var commonAncestorEntry = null
   // if the module is required in a same entrypoint twice
-  if (entry === curEntry) {
+  if (oldBelongingEntry === newBelongingEntry) {
     if (isEntry) {
       if (!resource.isEntry) {
         if (!config.silent) {
-          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parent.moduleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parentModuleId + '".')
+          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + oldParent.moduleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parentModuleId + '".')
         }
       } else {
         // ignore the duplicate require
@@ -138,22 +146,22 @@ function conflict (moduleId, parentModuleId, isEntry) {
         // ignore the duplicate require
       } else {
         // remove the asynchronized dep
-        _.remove(parent.asyncDeps, function (id) {
+        _.remove(oldParent.asyncDeps, function (id) {
           return moduleId === id
         })
         // add synchronized dep to current parent module.
-        curParent.deps.push(moduleId)
+        newParent.deps.push(moduleId)
         if (!config.silent) {
-          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parentModuleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parent.moduleId + '".')
+          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parentModuleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + oldParent.moduleId + '".')
         }
       }
       return
     }
   }
 
-  commonParent = findCommonParent(parent, curParent)
+  commonAncestorEntry = findCommonAncestorEntry(oldParent, newParent)
   // ignore the conflict if there're no common parent dependency between them.
-  if (!commonParent) {
+  if (!commonAncestorEntry) {
     if (isEntry) {
       resourceMap[parentModuleId].asyncDeps.push(moduleId)
     } else {
@@ -161,21 +169,25 @@ function conflict (moduleId, parentModuleId, isEntry) {
     }
     resource.parentModuleId = parentModuleId
     return
-  } else {
-    commonParent = resourceMap[commonParent]
   }
+
+  if (!resource.isEntry && commonAncestorEntry === oldParent) {
+    return
+  }
+
+  // get rid of this module from its current parent module.
+  _.remove(resource.isEntry ? oldParent.asyncDeps : oldParent.deps, function (fp) {
+    return moduleId === fp
+  })
 
   // transform the module into a synchronized dep.
   resource.isEntry = false
-  resource.parentModuleId = commonParent.moduleId
-  // get rid of this module from its current parent module.
-  _.remove(resource.isEntry ? parent.asyncDeps : parent.deps, function (fp) {
-    return moduleId === fp
-  })
+  resource.parentModuleId = commonAncestorEntry.moduleId
+
   // reset the module as a synchronized module of the common parent.
-  commonParent.deps.push(moduleId)
+  commonAncestorEntry.deps.push(moduleId)
   if (!config.silent) {
-    gutil.log('Dependency conflict occurs："' + moduleId + '" is required to be promoted as "' + commonParent.moduleId + '"\'s synchronized dependency.')
+    gutil.log('Dependency conflict occurs："' + moduleId + '" is required to be promoted as "' + commonAncestorEntry.moduleId + '"\'s synchronized dependency.')
   }
 }
 
@@ -199,7 +211,7 @@ function parseDepTree (moduleId, parentModuleId, isEntry) {
   var filepaths
 
   if (!vinylFile) {
-    throw new PluginError(PLUGIN_NAME, 'Could\'t find the module \'' + moduleId + '\'.')
+    throw new PluginError(PLUGIN_NAME, 'Can\'t find the module \'' + moduleId + '\'.')
   }
 
   if (shim) {

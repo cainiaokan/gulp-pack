@@ -1,5 +1,9 @@
 # gulp-pack 
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/cainiaokan/gulp-pack) [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack) [![npm version](https://img.shields.io/npm/v/gulp-dep-pack.svg?style=flat-square)](https://www.npmjs.com/package/gulp-dep-pack)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/cainiaokan/gulp-pack)
+[![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack) 
+[![npm version](https://img.shields.io/npm/v/gulp-dep-pack.svg)](https://www.npmjs.com/package/gulp-dep-pack) 
+[![Dependency Status](https://david-dm.org/cainiaokan/gulp-pack.svg)](https://david-dm.org/cainiaokan/gulp-pack) 
+[![Coverage Status](https://coveralls.io/repos/github/cainiaokan/gulp-pack/badge.svg?branch=master)](https://coveralls.io/github/cainiaokan/gulp-pack?branch=master)
 
 > Pack assets with [Gulp-Dep-Pack](https://github.com/cainiaokan/gulp-pack)
 
@@ -27,27 +31,64 @@ gulp.task('default', () =>
 );
 ```
 
-## Options
+### options
+Type: `object`
 
-* __baseUrl:__ 
-    Specify scripts' base url
-* __shim:__
-    for non-export modules
-* __genResDeps:__
-    generate a json file of assets dependencies(resource_deps.json by default)
-* __silent:__
-    disable logs
-* __entries:__
-    a glob pattern matches those entrypoints
+Set options described below from its properties. 
+  
+#### options.baseUrl
+Type: `string`
+Default: `/`
+
+Set base url for loading anther entry module asynchronously.
+
+#### options.shim
+Type: `object`
+Default: `{}`
+
+for non-export modules
+
+```js
+gulp.task('default', =>
+  gulp.src('src/**/*.*')
+    .pipe(pack({
+        baseUrl: 'http://mycdn.com/',
+        shim: {
+          'third/underscore': '_'
+        },
+        genResDeps: true,
+        entries: 'app/**/index.js'
+    }))
+    .pipe(gulp.dest('dist'))
+);
+```
+
+#### options.genResDeps
+Type: `boolean`
+Default: `true`
+
+generate a json file of assets dependencies(resource_deps.json by default)
+
+#### options.silent
+Type: `boolean`
+Default: `false`
+
+disable warnings
+
+#### options.entries
+Type: `string`
+Default: `app/**/index.js`
+
+a glob pattern matches those entrypoints
 
 ## Example
 ```js
-  const coffee       = require('gulp-coffee');
-  const coffeelint   = require('gulp-coffeelint');
-  const less         = require('gulp-less');
-  const minifyCss    = require('gulp-minify-css');
+  const coffee = require('gulp-coffee');
+  const coffeelint = require('gulp-coffeelint');
+  const less = require('gulp-less');
+  const minifyCss = require('gulp-minify-css');
   const autoprefixer = require('gulp-autoprefixer');
-  const merge        = require('merge2');
+  const merge = require('merge2');
 
   const preProcessors = [
     gulp.src(paths.coffee, { base: src })
@@ -66,9 +107,9 @@ gulp.task('default', () =>
     //run optimization
     //parse dependencies and pack each entrypoint and its deps into a single file
     .pipe(pack({
-      baseUrl    : 'http://yourcdn.com/',
-      genResDeps : true,
-      entries    : 'app/**/index.js'
+      baseUrl: 'http://yourcdn.com/',
+      genResDeps: true,
+      entries: 'app/**/index.js'
     }))
     .pipe(gulp.dest('dist');
 ```

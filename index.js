@@ -171,6 +171,7 @@ module.exports = function pack (conf) {
         var resourcesJson = new gutil.File({
           path: 'resource_deps.json'
         })
+        // console.log(JSON.stringify(resourceMap, null, 2))
         resourcesJson.contents = new Buffer(JSON.stringify(resourceMap, null, 2))
         stream.push(resourcesJson)
       }

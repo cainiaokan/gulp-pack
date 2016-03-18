@@ -1,50 +1,83 @@
 /* eslint-env node, mocha */
 
 var pack = require('../../')
+var path = require('path')
 var gulp = require('gulp')
 var through = require('through2')
 
 describe('gulp-pack', function () {
   describe('sync deps conflict', function () {
-    gulp.task('sync-deps-conflict', function () {
-      it('should has conflict', function (done) {
-        var stream = through.obj(function (file, encoding, cb) {
-          var resMap = null
-          var res = null
-          var resA = null
-          var resB = null
+    // case1
+    describe('#case1', function () {
+      gulp.task('sync-deps-conflict1', function () {
+        it('should has conflict', function (done) {
+          var stream = through.obj(function (file, encoding, cb) {
+            var resMap = null
 
-          if (file.relative === 'resource_deps.json') {
-            resMap = JSON.parse(file.contents.toString())
-            resMap.should.not.be.undefined()
+            if (file.relative === 'resource_deps.json') {
+              resMap = JSON.parse(file.contents.toString())
+              resMap.should.not.be.undefined()
 
-            res = resMap['index.js']
-            res.should.not.be.undefined()
-            res.deps.should.match(['a.js', 'b.js'])
+              resMap['index.js'].deps.should.match(['a.js', 'b.js'])
 
-            resA = resMap['a.js']
-            resA.should.not.be.undefined()
-            resA.deps.should.match(['c.js'])
+              resMap['a.js'].deps.should.match(['c.js'])
 
-            resB = resMap['b.js']
-            resB.should.not.be.undefined()
-            resB.deps.should.be.empty()
+              resMap['b.js'].deps.should.be.empty()
 
-            resMap['c.js'].should.not.be.undefined()
+              resMap['c.js'].deps.should.be.empty()
 
-            done()
-          }
-          cb()
+              done()
+            }
+            cb()
+          })
+          return gulp.src(path.join(__dirname, 'case1/*.js'))
+            .pipe(pack({
+              baseUrl: '/',
+              genResDeps: true,
+              entries: 'index.js'
+            }))
+            .pipe(stream)
         })
-        return gulp.src('test/sync_deps_conflict/*.js')
-          .pipe(pack({
-            baseUrl: '/',
-            genResDeps: true,
-            entries: 'index.js'
-          }))
-          .pipe(stream)
       })
+      gulp.start('sync-deps-conflict1')
     })
-    gulp.start('sync-deps-conflict')
+    // case2
+    describe('#case2', function () {
+      gulp.task('sync-deps-conflict2', function () {
+        it('should has conflict', function (done) {
+          var stream = through.obj(function (file, encoding, cb) {
+            var resMap = null
+            var res = null
+
+            if (file.relative === 'resource_deps.json') {
+              resMap = JSON.parse(file.contents.toString())
+              resMap.should.not.be.undefined()
+
+              res = resMap['index.js']
+              res.deps.should.match(['a.js', 'b.js'])
+
+              resMap['a.js'].deps.should.match(['d.js'])
+
+              resMap['b.js'].deps.should.be.match(['c.js'])
+
+              resMap['c.js'].deps.should.be.empty()
+
+              resMap['d.js'].deps.should.be.empty()
+
+              done()
+            }
+            cb()
+          })
+          return gulp.src(path.join(__dirname, 'case2/*.js'))
+            .pipe(pack({
+              baseUrl: '/',
+              genResDeps: true,
+              entries: 'index.js'
+            }))
+            .pipe(stream)
+        })
+      })
+      gulp.start('sync-deps-conflict2')
+    })
   })
 })
