@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "standard": "standard",
-    "test": "mocha \"test/**/test.js\" -R spec --require should"
+    "test": "istanbul cover node_modules/mocha/bin/_mocha test/**/test.js -- --require should -R mocha-lcov-reporter",
+    "coverage": "cat ./coverage/lcov.info | coveralls"
   },
   "repository": "cainiaokan/gulp-pack",
   "keywords": [
@@ -28,8 +29,11 @@
     "lodash": "^4.6.1"
   },
   "devDependencies": {
+    "coveralls": "^2.11.8",
     "gulp": "^3.9.0",
+    "istanbul": "^0.4.2",
     "mocha": "^2.2.5",
+    "mocha-lcov-reporter": "^1.2.0",
     "pre-commit": "^1.0.10",
     "should": "^8.2.2",
     "standard": "^6.0.8"
