@@ -19,7 +19,7 @@ var modularjs = fs.readFileSync(MODULAR_FILE, {encoding: 'utf-8'})
 var modularjs_async = fs.readFileSync(MODULAR_ASYNC_FILE, {encoding: 'utf-8'})
 
 var defaultCfg = {
-  baseUrl: './',
+  baseUrl: '/',
   shim: {},
   genResDeps: false,
   silent: false,

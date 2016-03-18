@@ -31,8 +31,8 @@
     "gulp": "^3.9.0",
     "mocha": "^2.2.5",
     "pre-commit": "^1.0.10",
-    "standard": "^6.0.8",
-    "should": "^8.2.2"
+    "should": "^8.2.2",
+    "standard": "^6.0.8"
   },
   "pre-commit": [
     "standard",
