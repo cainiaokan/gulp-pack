@@ -1,4 +1,4 @@
-# gulp-pack 
+# gulp-dep-pack 
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/cainiaokan/gulp-pack)
 [![Build Status](https://travis-ci.org/cainiaokan/gulp-pack.svg?branch=master)](https://travis-ci.org/cainiaokan/gulp-pack) 
 [![npm version](https://img.shields.io/npm/v/gulp-dep-pack.svg)](https://www.npmjs.com/package/gulp-dep-pack) 
@@ -24,8 +24,8 @@ gulp.task('default', () =>
   gulp.src('src/**/*.*')
     .pipe(pack({
       baseUrl: 'http://mycdn.com/',
-            genResDeps : true,
-            entries    : 'app/**/index.js'
+      genResDeps : true,
+      entries    : 'app/**/index.js'
     }))
     .pipe(gulp.dest('dist'))
 );
@@ -52,12 +52,12 @@ for non-export modules
 gulp.task('default', =>
   gulp.src('src/**/*.*')
     .pipe(pack({
-        baseUrl: 'http://mycdn.com/',
-        shim: {
-          'third/underscore': '_'
-        },
-        genResDeps: true,
-        entries: 'app/**/index.js'
+      baseUrl: 'http://mycdn.com/',
+      shim: {
+        'third/underscore': '_'
+      },
+      genResDeps: true,
+      entries: 'app/**/index.js'
     }))
     .pipe(gulp.dest('dist'))
 );
