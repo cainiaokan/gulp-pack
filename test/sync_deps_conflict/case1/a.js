@@ -7,3 +7,5 @@ exports.get = function () {
 var c = require('./c')
 
 c.get()
+
+require('c')

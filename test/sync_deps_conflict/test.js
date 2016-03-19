@@ -18,7 +18,7 @@ describe('gulp-pack', function () {
               resMap = JSON.parse(file.contents.toString())
               resMap.should.not.be.undefined()
 
-              resMap['index.js'].deps.should.match(['a.js', 'b.js'])
+              resMap['index.js'].deps.should.match(['b.js', 'a.js'])
 
               resMap['a.js'].deps.should.match(['c.js'])
 
@@ -33,6 +33,7 @@ describe('gulp-pack', function () {
           return gulp.src(path.join(__dirname, 'case1/*.js'))
             .pipe(pack({
               baseUrl: '/',
+              silent: true,
               genResDeps: true,
               entries: 'index.js'
             }))
@@ -47,14 +48,11 @@ describe('gulp-pack', function () {
         it('should has conflict', function (done) {
           var stream = through.obj(function (file, encoding, cb) {
             var resMap = null
-            var res = null
 
             if (file.relative === 'resource_deps.json') {
               resMap = JSON.parse(file.contents.toString())
-              resMap.should.not.be.undefined()
 
-              res = resMap['index.js']
-              res.deps.should.match(['a.js', 'b.js'])
+              resMap['index.js'].deps.should.match(['a.js', 'b.js'])
 
               resMap['a.js'].deps.should.match(['d.js'])
 
@@ -71,6 +69,7 @@ describe('gulp-pack', function () {
           return gulp.src(path.join(__dirname, 'case2/*.js'))
             .pipe(pack({
               baseUrl: '/',
+              silent: true,
               genResDeps: true,
               entries: 'index.js'
             }))

@@ -1,7 +1,7 @@
 'use strict'
 
-var b = require('./b')
 var a = require('./a')
+var b = require('./b')
 
 a.get()
 b.get()

@@ -13,16 +13,13 @@ describe('gulp-pack', function () {
         it('should has conflict', function (done) {
           var stream = through.obj(function (file, encoding, cb) {
             var resMap = null
-            var res = null
 
             if (file.relative === 'resource_deps.json') {
               resMap = JSON.parse(file.contents.toString())
               resMap.should.not.be.undefined()
 
-              res = resMap['index.js']
-              res.should.not.be.undefined()
-              res.asyncDeps.should.match(['a.js', 'b.js'])
-              res.deps.should.match(['c.js'])
+              resMap['index.js'].asyncDeps.should.match(['a.js', 'b.js'])
+              resMap['index.js'].deps.should.match(['c.js'])
 
               resMap['a.js'].should.not.be.undefined()
               resMap['a.js'].asyncDeps.should.be.empty()

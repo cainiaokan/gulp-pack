@@ -24,8 +24,8 @@ gulp.task('default', () =>
   gulp.src('src/**/*.*')
     .pipe(pack({
       baseUrl: 'http://mycdn.com/',
-      genResDeps : true,
-      entries    : 'app/**/index.js'
+      genResDeps: true,
+      entries: 'app/**/index.js'
     }))
     .pipe(gulp.dest('dist'))
 );
@@ -54,7 +54,9 @@ gulp.task('default', =>
     .pipe(pack({
       baseUrl: 'http://mycdn.com/',
       shim: {
-        'third/underscore': '_'
+        'third/underscore.js': {
+          exports: '_'
+        }
       },
       genResDeps: true,
       entries: 'app/**/index.js'
@@ -77,18 +79,18 @@ disable warnings
 
 #### options.entries
 Type: `string`
-Default: `app/**/index.js`
+Default: `**/index.js`
 
 a glob pattern matches those entrypoints
 
 ## Example
 ```js
-  const coffee = require('gulp-coffee');
-  const coffeelint = require('gulp-coffeelint');
-  const less = require('gulp-less');
-  const minifyCss = require('gulp-minify-css');
-  const autoprefixer = require('gulp-autoprefixer');
-  const merge = require('merge2');
+  const coffee = require('gulp-coffee')
+  const coffeelint = require('gulp-coffeelint')
+  const less = require('gulp-less')
+  const minifyCss = require('gulp-minify-css')
+  const autoprefixer = require('gulp-autoprefixer')
+  const merge = require('merge2')
 
   const preProcessors = [
     gulp.src(paths.coffee, { base: src })
@@ -100,7 +102,7 @@ a glob pattern matches those entrypoints
       .pipe(less())
       .pipe(autoprefixer({browsers: ['Android > 4', 'iOS > 6'], cascade: false}))
       .pipe(minifyCss({ processImport: false }))
-  ];
+  ]
 
   //merge prepreocessor streams into one single stream
   return merge(preProcessors)
@@ -111,7 +113,7 @@ a glob pattern matches those entrypoints
       genResDeps: true,
       entries: 'app/**/index.js'
     }))
-    .pipe(gulp.dest('dist');
+    .pipe(gulp.dest('dist')
 ```
 ## License
 

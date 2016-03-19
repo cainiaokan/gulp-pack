@@ -8,3 +8,7 @@ require.async('./c', function (c) {
   console.log(c.get())
 })
 
+require.async('/c', function (c) {
+  console.log(c.get())
+})
+

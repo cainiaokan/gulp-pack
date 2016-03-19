@@ -7,4 +7,3 @@ require.async('./a', function (a) {
 require.async('./b', function (b) {
   console.log(b.get())
 })
-

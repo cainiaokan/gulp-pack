@@ -3,3 +3,4 @@
 exports.get = function () {
   return module.uri
 }
+

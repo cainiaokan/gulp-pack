@@ -4,4 +4,6 @@ exports.get = function () {
   return module.uri
 }
 
-require('./c').get()
+require.async('./c', function (c) {
+  console.log(c.get())
+})

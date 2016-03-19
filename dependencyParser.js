@@ -20,21 +20,38 @@ function setVinylFiles (files) {
 }
 
 function getModuleId (vinylFile, moduleId) {
-  // the path starts with a '/'
+  var pathname = moduleId
+
   if (path.isAbsolute(moduleId)) {
-    moduleId = path.normalize(moduleId).substring(1)
+    moduleId = moduleId.substring(1)
   } else if (moduleId.charAt(0) === '.') {
-    moduleId = path.normalize(path.dirname(vinylFile.relative) + '/' + moduleId)
-  } else {
-    moduleId = path.normalize(moduleId)
+    moduleId = path.join(path.dirname(vinylFile.relative), moduleId)
   }
+
+  moduleId = path.normalize(moduleId)
 
   if (process.platform === 'win32') {
     moduleId = moduleId.replace(/\\+/g, '/')
   }
 
+  if (moduleId.charAt(moduleId.length - 1) === '/') {
+    moduleId += 'index'
+  }
+
   if (!path.extname(moduleId)) {
-    moduleId += '.js'
+    if (vinylFiles[moduleId + '.js']) {
+      moduleId += '.js'
+    } else if (vinylFiles[moduleId + '.json']) {
+      moduleId += '.json'
+    } else if (vinylFiles[moduleId + '.css']) {
+      moduleId += '.css'
+    } else if (vinylFiles[moduleId + '.tpl']) {
+      moduleId += '.tpl'
+    } else if (vinylFiles[moduleId + '.tmpl']) {
+      moduleId += '.tmpl'
+    } else {
+      throw new PluginError(PLUGIN_NAME, 'Can\'t find any module match the path \'' + pathname + '\'')
+    }
   }
 
   return moduleId
@@ -216,7 +233,7 @@ function parseDepTree (moduleId, parentModuleId, isEntry) {
 
   if (shim) {
     resource.shim = true
-    resource.exports = shim.exports
+    resource.exports = typeof shim === 'string' ? shim : shim.exports
   }
 
   resourceMap[moduleId] = resource
