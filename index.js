@@ -40,25 +40,38 @@ function writeBundle (moduleId) {
 }
 
 function writeDeps (moduleId) {
-  var res = resourceMap[moduleId]
+  var module = resourceMap[moduleId]
+  var vinylFile = vinylFiles[moduleId]
   var contents = ''
 
-  res.deps.forEach(function (moduleId) {
-    contents += writeDeps(resourceMap[moduleId].moduleId)
+  // use avaiable transformed contents first
+  if (module.isTransformed) {
+    return vinylFile.contents.toString()
+  }
+
+  module.deps.forEach(function (moduleId) {
+    contents += writeDeps(moduleId)
   })
-  // write asynchronized entry.
-  res.asyncDeps.forEach(function (moduleId) {
-    writeBundle(resourceMap[moduleId].moduleId)
-  })
+
   contents += wrapModuleDef(moduleId)
 
   // if main entrypoint, add module manage snippet in front of it.
-  if (res.isEntry && res.parentModuleId === null) {
-    contents = (res.asyncDeps.length ? modularjs_async : modularjs) +
+  if (module.isEntry && module.parentModuleId === null) {
+    contents = (module.asyncDeps.length ? modularjs_async : modularjs) +
       os.EOL + writeJsConfig() + contents
     // insert require.
     contents += os.EOL + 'require(\'' + moduleId + '\')' + os.EOL
   }
+
+  // save transformed contents for subsequent possible uses
+  module.isTransformed = true
+  vinylFile.contents = new Buffer(contents)
+
+  // write asynchronized entry.
+  module.asyncDeps.forEach(function (moduleId) {
+    writeBundle(moduleId)
+  })
+
   return contents
 }
 
@@ -72,7 +85,7 @@ function writeJsConfig () {
 
 function wrapModuleDef (moduleId) {
   var vinylFile = vinylFiles[moduleId]
-  var res = resourceMap[moduleId]
+  var module = resourceMap[moduleId]
   var extname = path.extname(moduleId)
   var fileContents = vinylFile.contents.toString()
   var contents = ''
@@ -102,8 +115,8 @@ function wrapModuleDef (moduleId) {
     throw new gutil.PluginError(PLUGIN_NAME, 'Unknow file type: ' + vinylFiles.path)
   }
 
-  if (res.shim && res.exports) {
-    contents += EOL + '  module.exports = ' + res.exports + ''
+  if (module.shim && module.exports) {
+    contents += EOL + '  module.exports = ' + module.exports + ''
   }
 
   contents += EOL + '})' + EOL
@@ -129,7 +142,7 @@ module.exports = function pack (conf) {
 
     if (file.isBuffer()) {
       if (process.platform === 'win32') {
-        moduleId = moduleId.replace(/\\+/g, '/')
+        moduleId = moduleId.replace(/\\+/g, path.posix.sep)
       }
       // collect files for the following process
       vinylFiles[moduleId] = file.clone()
@@ -158,10 +171,11 @@ module.exports = function pack (conf) {
 
     if (!isErrorExist) {
       Object.keys(vinylFiles).forEach(function (moduleId) {
-        var res = resourceMap[moduleId]
-        if (!res) {
+        var module = resourceMap[moduleId]
+        if (!module) {
           stream.push(vinylFiles[moduleId])
-        } else if (!res.combined) {
+        // ignore those not-entry and combined files
+        } else if (module.isEntry || !module.combined) {
           stream.push(vinylFiles[moduleId])
         }
       })

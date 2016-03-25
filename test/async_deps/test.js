@@ -27,6 +27,7 @@ describe('gulp-pack', function () {
             }
             cb()
           })
+
           return gulp.src(path.join(__dirname, 'case1/*.js'))
             .pipe(pack({
               baseUrl: 'http://localhost',
@@ -56,6 +57,7 @@ describe('gulp-pack', function () {
             }
             cb()
           })
+          
           return gulp.src(path.join(__dirname, 'case2/**/*.*'))
             .pipe(pack({
               genResDeps: true

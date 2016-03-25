@@ -1,4 +1,5 @@
 var _ = require('lodash')
+var fs = require('fs')
 var path = require('path')
 var gutil = require('gulp-util')
 var PluginError = gutil.PluginError
@@ -19,26 +20,30 @@ function setVinylFiles (files) {
   vinylFiles = files
 }
 
-function getModuleId (vinylFile, moduleId) {
-  var pathname = moduleId
+function getModuleId (file, pathname) {
+  var moduleId = pathname
+  var extname = path.extname(moduleId)
 
-  if (path.isAbsolute(moduleId)) {
-    moduleId = moduleId.substring(1)
-  } else if (moduleId.charAt(0) === '.') {
-    moduleId = path.join(path.dirname(vinylFile.relative), moduleId)
+  if (path.isAbsolute(pathname)) {
+    moduleId = pathname.substring(1)
+  } else if (pathname.startsWith('.')) {
+    moduleId = path.join(path.dirname(file.relative), pathname)
+  } else {
+    // not support core module and node_modules
+    // therefore it's identical to a path starts with a '/' here
   }
 
-  moduleId = path.normalize(moduleId)
-
-  if (process.platform === 'win32') {
-    moduleId = moduleId.replace(/\\+/g, '/')
-  }
-
-  if (moduleId.charAt(moduleId.length - 1) === '/') {
-    moduleId += 'index'
-  }
-
-  if (!path.extname(moduleId)) {
+  if (!extname) {
+    try {
+      // check if it is a directory. not support package.json
+      if (fs.statSync(path.resolve(file.base, moduleId)).isDirectory()) {
+        moduleId += '/index'
+      }
+    } catch (ex) {}
+    moduleId = path.normalize(moduleId)
+    if (process.platform === 'win32') {
+      moduleId = moduleId.replace(/\\+/g, path.posix.sep)
+    }
     if (vinylFiles[moduleId + '.js']) {
       moduleId += '.js'
     } else if (vinylFiles[moduleId + '.json']) {
@@ -54,6 +59,12 @@ function getModuleId (vinylFile, moduleId) {
     }
   }
 
+  moduleId = path.normalize(moduleId)
+
+  if (process.platform === 'win32') {
+    moduleId = moduleId.replace(/\\+/g, path.posix.sep)
+  }
+
   return moduleId
 }
 
@@ -67,8 +78,8 @@ function extractPath (vinylFile) {
   // rewirte module's id names as full pathnames.
   // eg. "../a/b" to "myapp/modules/a/b.js"
   fileContents = fileContents
-    .replace(reReq, function (__, isAsync, delimiter, moduleId) {
-      moduleId = getModuleId(vinylFile, moduleId)
+    .replace(reReq, function (__, isAsync, delimiter, path) {
+      var moduleId = getModuleId(vinylFile, path)
       // extract deps
       if (isAsync) {
         filepaths.asyncRequire = filepaths.asyncRequire.concat(moduleId)
@@ -85,55 +96,64 @@ function extractPath (vinylFile) {
 }
 
 function getCircularDep (moduleId, parentModuleId) {
-  var parent
+  var parent = resourceMap[parentModuleId]
   var circular = [moduleId]
-  do {
+
+  while (parent && parentModuleId) {
     circular.push(parentModuleId)
-    if (parentModuleId === moduleId) return circular.reverse()
-  } while (
-    !!(parent = resourceMap[parentModuleId]) &&
-    (parentModuleId = parent.parentModuleId)
-  )
+    if (parentModuleId === moduleId) {
+      return circular.reverse()
+    } else {
+      parent = resourceMap[parentModuleId]
+      parentModuleId = parent.parentModuleId
+    }
+  }
 
   return null
 }
 
-function findBelongingEntry (resource) {
-  while (resource && !resource.isEntry) {
-    resource = resourceMap[resource.parentModuleId]
+function findBelongingEntryId (moduleId) {
+  var module = resourceMap[moduleId]
+  while (module && !module.isEntry) {
+    moduleId = module.parentModuleId
+    module = resourceMap[moduleId]
   }
-  return resource
+  return moduleId
 }
 
-function findCommonAncestor (res1, res2) {
+function findCommonAncestorId (moduleId1, moduleId2) {
   var array1 = []
   var array2 = []
+  var module1 = resourceMap[moduleId1]
+  var module2 = resourceMap[moduleId2]
   var commonAncestorId = null
 
   while (true) {
-    if (!res1) break
-    array1.push(res1.moduleId)
-    res1 = resourceMap[res1.parentModuleId]
+    if (!module1) break
+    array1.push(moduleId1)
+    moduleId1 = module1.parentModuleId
+    module1 = resourceMap[moduleId1]
   }
 
   while (true) {
-    if (!res2) break
-    array2.push(res2.moduleId)
-    res2 = resourceMap[res2.parentModuleId]
+    if (!module2) break
+    array2.push(moduleId2)
+    moduleId2 = module2.parentModuleId
+    module2 = resourceMap[moduleId2]
   }
 
   commonAncestorId = _.intersection(array1, array2)[0]
 
-  return resourceMap[commonAncestorId] || null
+  return commonAncestorId || null
 }
 
-function findCommonAncestorEntry (res1, res2) {
-  return findBelongingEntry(findCommonAncestor(res1, res2))
+function findCommonAncestorEntryId (moduleId1, moduleId2) {
+  return findBelongingEntryId(findCommonAncestorId(moduleId1, moduleId2))
 }
 
 function conflict (moduleId, parentModuleId, isEntry) {
-  var resource = resourceMap[moduleId]
-  if (resource.isEntry && resource.parentModuleId === null) {
+  var module = resourceMap[moduleId]
+  if (module.isEntry && module.parentModuleId === null) {
     throw new PluginError(PLUGIN_NAME, 'Can\'t depend on main entry.')
   }
 
@@ -142,24 +162,27 @@ function conflict (moduleId, parentModuleId, isEntry) {
     throw new PluginError(PLUGIN_NAME, 'Circular dependency occurs：[' + circular.join('->') + '], please check your code.')
   }
 
-  var oldParent = resourceMap[resource.parentModuleId]
-  var newParent = resourceMap[parentModuleId]
-  var oldBelongingEntry = findBelongingEntry(oldParent)
-  var newBelongingEntry = findBelongingEntry(newParent)
+  var oldParentId = module.parentModuleId
+  var newParentId = parentModuleId
+  var oldParent = resourceMap[oldParentId]
+  var newParent = resourceMap[newParentId]
+  var oldBelongingEntryId = findBelongingEntryId(oldParentId)
+  var newBelongingEntryId = findBelongingEntryId(newParentId)
+  var commonAncestorEntryId = null
   var commonAncestorEntry = null
   // if the module is required in a same entrypoint twice
-  if (oldBelongingEntry === newBelongingEntry) {
+  if (oldBelongingEntryId === newBelongingEntryId) {
     if (isEntry) {
-      if (!resource.isEntry) {
+      if (!module.isEntry) {
         if (!config.silent) {
-          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + oldParent.moduleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + parentModuleId + '".')
+          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + oldParentId + '", therefore it can\'t be declared as an asynchronized dependency of "' + newParentId + '".')
         }
       } else {
         // ignore the duplicate require
       }
       return
     } else {
-      if (!resource.isEntry) {
+      if (!module.isEntry) {
         // ignore the duplicate require
       } else {
         // remove the asynchronized dep
@@ -169,42 +192,44 @@ function conflict (moduleId, parentModuleId, isEntry) {
         // add synchronized dep to current parent module.
         newParent.deps.push(moduleId)
         if (!config.silent) {
-          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + parentModuleId + '", therefore it can\'t be declared as an asynchronized dependency of "' + oldParent.moduleId + '".')
+          gutil.log('Dependency conflict occurs："' + moduleId + '" has been declared as a synchronized dependency of "' + newParentId + '", therefore it can\'t be declared as an asynchronized dependency of "' + oldParentId + '".')
         }
       }
       return
     }
   }
 
-  commonAncestorEntry = findCommonAncestorEntry(oldParent, newParent)
+  commonAncestorEntryId = findCommonAncestorEntryId(oldParentId, newParentId)
+  commonAncestorEntry = resourceMap[commonAncestorEntryId]
+
   // ignore the conflict if there're no common parent dependency between them.
-  if (!commonAncestorEntry) {
+  if (!commonAncestorEntryId) {
     if (isEntry) {
-      resourceMap[parentModuleId].asyncDeps.push(moduleId)
+      newParent.asyncDeps.push(moduleId)
     } else {
-      resourceMap[parentModuleId].deps.push(moduleId)
+      newParent.deps.push(moduleId)
     }
-    resource.parentModuleId = parentModuleId
+    module.parentModuleId = newParentId
     return
   }
 
-  if (!resource.isEntry && commonAncestorEntry === oldParent) {
+  if (!module.isEntry && commonAncestorEntryId === oldParentId) {
     return
   }
 
   // get rid of this module from its current parent module.
-  _.remove(resource.isEntry ? oldParent.asyncDeps : oldParent.deps, function (fp) {
+  _.remove(module.isEntry ? oldParent.asyncDeps : oldParent.deps, function (fp) {
     return moduleId === fp
   })
 
   // transform the module into a synchronized dep.
-  resource.isEntry = false
-  resource.parentModuleId = commonAncestorEntry.moduleId
+  module.isEntry = false
+  module.parentModuleId = commonAncestorEntryId
 
   // reset the module as a synchronized module of the common parent.
   commonAncestorEntry.deps.push(moduleId)
   if (!config.silent) {
-    gutil.log('Dependency conflict occurs："' + moduleId + '" is required to be promoted as "' + commonAncestorEntry.moduleId + '"\'s synchronized dependency.')
+    gutil.log('Dependency conflict occurs："' + moduleId + '" is required to be promoted as "' + commonAncestorEntryId + '"\'s synchronized dependency.')
   }
 }
 
@@ -216,15 +241,14 @@ function parseDepTree (moduleId, parentModuleId, isEntry) {
   var vinylFile = vinylFiles[moduleId]
   var extname = path.extname(moduleId)
   var shim = config.shim[moduleId]
-  var resource = {
-    moduleId: moduleId,
+  var module = {
     isEntry: isEntry,
     deps: [],
     asyncDeps: [],
     parentModuleId: parentModuleId
   }
-  var deps = resource.deps
-  var asyncDeps = resource.asyncDeps
+  var deps = module.deps
+  var asyncDeps = module.asyncDeps
   var filepaths
 
   if (!vinylFile) {
@@ -232,17 +256,17 @@ function parseDepTree (moduleId, parentModuleId, isEntry) {
   }
 
   if (shim) {
-    resource.shim = true
-    resource.exports = typeof shim === 'string' ? shim : shim.exports
+    module.shim = true
+    module.exports = typeof shim === 'string' ? shim : shim.exports
   }
 
-  resourceMap[moduleId] = resource
+  resourceMap[moduleId] = module
 
   if (extname === '.js') {
     filepaths = extractPath(vinylFile)
-    if (!isEntry)resource.combined = true
+    if (!isEntry) module.combined = true
   } else {
-    resource.combined = true
+    module.combined = true
     return
   }
 

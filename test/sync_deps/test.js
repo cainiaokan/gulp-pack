@@ -15,19 +15,20 @@ describe('gulp-pack', function () {
           if (file.relative === 'resource_deps.json') {
             resMap = JSON.parse(file.contents.toString())
 
-            resMap['index.js'].deps.should.match(['a.js', 'b.js'])
+            resMap['index.js'].deps.should.match(['a.js', 'b/index.js'])
 
             resMap['a.js'].deps.should.be.empty()
 
-            resMap['b.js'].deps.should.be.empty()
+            resMap['b/index.js'].deps.should.be.empty()
 
             done()
           }
           cb()
         })
-        return gulp.src(path.join(__dirname, '*.js'))
+        return gulp.src(path.join(__dirname, '**/*.js'))
           .pipe(pack({
-            genResDeps: true
+            genResDeps: true,
+            entrys: 'index.js'
           }))
           .pipe(stream)
       })

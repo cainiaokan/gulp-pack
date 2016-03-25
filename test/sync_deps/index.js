@@ -1,6 +1,6 @@
 'use strict'
 
-var a = require('./a')
+var a = require('./a.js')
 var b = require('./b')
 
 a.get()

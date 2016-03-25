@@ -8,7 +8,7 @@ describe('gulp-pack', function () {
   // circular
   describe('circular deps', function () {
     gulp.task('circular-deps', function () {
-      it('should throw error when having circular deps', function (done) {
+      it('should throw error', function (done) {
         var errorHandler = function (err) {
           err.message.should.startWith('Circular dependency occurs：[a.js->b.js->c.js->a.js]')
           done()
@@ -26,7 +26,7 @@ describe('gulp-pack', function () {
 
   describe('depend on main entry', function () {
     gulp.task('dep_main_entry', function () {
-      it('should throw error when dep on main entry', function (done) {
+      it('should throw error', function (done) {
         var errorHandler = function (err) {
           err.message.should.be.eql('Can\'t depend on main entry.')
           done()

@@ -5,4 +5,3 @@ exports.get = function () {
 }
 
 require('index.js')
-
