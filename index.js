@@ -142,7 +142,7 @@ module.exports = function pack (conf) {
 
     if (file.isBuffer()) {
       if (process.platform === 'win32') {
-        moduleId = moduleId.replace(/\\+/g, path.posix.sep)
+        moduleId = moduleId.replace(/\\+/g, '/')
       }
       // collect files for the following process
       vinylFiles[moduleId] = file.clone()

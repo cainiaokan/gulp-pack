@@ -24,9 +24,9 @@ function getModuleId (file, pathname) {
   var moduleId = pathname
   var extname = path.extname(moduleId)
 
-  if (path.isAbsolute(pathname)) {
+  if (pathname.charAt(0) === '/') {
     moduleId = pathname.substring(1)
-  } else if (pathname.startsWith('.')) {
+  } else if (pathname.charAt(0) === '.') {
     moduleId = path.join(path.dirname(file.relative), pathname)
   } else {
     // not support core module and node_modules
@@ -42,7 +42,7 @@ function getModuleId (file, pathname) {
     } catch (ex) {}
     moduleId = path.normalize(moduleId)
     if (process.platform === 'win32') {
-      moduleId = moduleId.replace(/\\+/g, path.posix.sep)
+      moduleId = moduleId.replace(/\\+/g, '/')
     }
     if (vinylFiles[moduleId + '.js']) {
       moduleId += '.js'
@@ -62,7 +62,7 @@ function getModuleId (file, pathname) {
   moduleId = path.normalize(moduleId)
 
   if (process.platform === 'win32') {
-    moduleId = moduleId.replace(/\\+/g, path.posix.sep)
+    moduleId = moduleId.replace(/\\+/g, '/')
   }
 
   return moduleId
