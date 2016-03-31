@@ -145,7 +145,7 @@ module.exports = function pack (conf) {
         moduleId = moduleId.replace(/\\+/g, '/')
       }
       // collect files for the following process
-      vinylFiles[moduleId] = file.clone()
+      vinylFiles[moduleId] = file
       cb()
     }
   }, function (cb) {
