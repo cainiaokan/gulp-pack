@@ -57,7 +57,7 @@ describe('gulp-pack', function () {
             }
             cb()
           })
-          
+
           return gulp.src(path.join(__dirname, 'case2/**/*.*'))
             .pipe(pack({
               genResDeps: true

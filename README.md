@@ -115,6 +115,168 @@ a glob pattern matches those entrypoints
     }))
     .pipe(gulp.dest('dist')
 ```
+*An output example*
+```js
+'use strict'
+
+/* eslint-disable */
+var require
+var define
+/* eslint-enable */
+
+(function (undef) {
+  var req
+  var defined = {}
+  var waiting = {}
+  var config = {}
+  var hasOwn = Object.prototype.hasOwnProperty
+
+  function hasProp (obj, prop) {
+    return hasOwn.call(obj, prop)
+  }
+
+  function isAbsolute (url) {
+    return url.indexOf('://') > 0 || url.indexOf('//') === 0
+  }
+
+  function main (id, factory) {
+    var module, exports, ret
+    module = {
+      id: id,
+      uri: req.toUri(id),
+      exports: {},
+      config: {}
+    }
+    exports = module.exports
+    if (typeof factory === 'function') {
+      ret = factory.apply(undef, [req, exports, module])
+      if (ret) {
+        module.exports = ret
+      }
+    } else {
+      module.exports = factory
+    }
+    defined[id] = module.exports
+  }
+
+  function callDep (id) {
+    if (hasProp(waiting, id)) {
+      var args = waiting[id]
+      delete waiting[id]
+      main.apply(undef, args)
+    }
+    if (!hasProp(defined, id)) {
+      throw new Error('No ' + id)
+    }
+    return defined[id]
+  }
+
+  require = req = function (id) {
+    return callDep(id)
+  }
+  req.defined = defined
+  req.waiting = waiting
+
+  req.toUri = function (id) {
+    if (isAbsolute(id)) {
+      return id
+    } else {
+      return config.baseUrl + id
+    }
+  }
+
+  req.config = function (cfg) {
+    if (typeof cfg === 'string') {
+      return config[cfg]
+    } else if (typeof cfg === 'object') {
+      for (var p in cfg) {
+        if (cfg.hasOwnProperty(p)) {
+          config[p] = cfg[p]
+        }
+      }
+    }
+  }
+
+  define = function (id, factory) {
+    if (!hasProp(defined, id) && !hasProp(waiting, id)) {
+      waiting[id] = [id, factory]
+    } else {
+      throw Error('Duplicate ' + id)
+    }
+  }
+})()
+
+require.config({
+  "baseUrl": "./"
+})
+define('common/style/common.css', function (require, exports, module){
+  var style = document.createElement("style")
+  var contents = 'body,html{font:16px/1 arial,tahoma,microsoft yahei,sans-serif,sans-serif;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}'
+  style.type = "text/css"
+  if (style.styleSheet) {
+    style.styleSheet.cssText = contents
+  } else {
+    style.innerHTML = contents
+  }
+  document.getElementsByTagName("head")[0].appendChild(style)
+})
+
+define('common/script/util.js', function (require, exports, module){
+'use strict'
+
+// get time string
+exports.getTime = function () {
+  var now = new Date()
+  var year = now.getFullYear()
+  var month = now.getMonth() + 1
+  var day = now.getDate()
+  return year.toString() +
+    (month >= 10 ? month : '0' + month) +
+    (day >= 10 ? day : '0' + day)
+}
+
+
+})
+
+define('app/page/show_time/message.js', function (require, exports, module){
+'use strict'
+
+exports.getMessage = function () {
+  return 'now you know.'
+}
+
+
+})
+
+define('app/page/show_time/time.tpl', function (require, exports, module){
+return function(data){
+var __t,__p='',__j=Array.prototype.join,print=function(){__p+=__j.call(arguments,'');};
+__p+='<h1>Time is '+
+((__t=(data.time))==null?'':__t)+
+'</h1>';
+return __p;
+}
+})
+
+define('app/page/show_time/index.js', function (require, exports, module){
+/* global $, alert*/
+'use stirct'
+
+require('common/style/common.css')
+
+var util = require('common/script/util.js')
+var message = require('app/page/show_time/message.js')
+var timeTpl = require('app/page/show_time/time.tpl')
+
+$('body').append(timeTpl({time: util.getTime()}))
+
+alert(message.getMessage())
+
+
+})
+
+require('app/page/show_time/index.js')
+```
 ## License
 
 MIT © [Louie Lang](https://github.com/cainiaokan)

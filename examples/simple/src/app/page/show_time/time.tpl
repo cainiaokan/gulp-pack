@@ -1,1 +1,1 @@
-<h1>Time is <%=time%></h1>
+<h1>Time is <%=data.time%></h1>

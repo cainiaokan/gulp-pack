@@ -10,6 +10,7 @@
   "strict": true,
   "undef": true,
   "unused": true,
+  "lastsemic": false,
   "globals": {
     "$": true,
     "alert": true,

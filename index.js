@@ -7,7 +7,7 @@ var minimatch = require('minimatch')
 var path = require('path')
 var fs = require('fs')
 var os = require('os')
-var _ = require('lodash')
+var _ = require('underscore')
 var through = require('through2')
 
 var vinylFiles
@@ -110,7 +110,7 @@ function wrapModuleDef (moduleId) {
   } else if (extname === '.json') {
     contents += EOL + '  return ' + fileContents + ''
   } else if (extname === '.tpl' || extname === '.tmpl') {
-    contents += EOL + '  return _.template(\'' + fileContents.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/>\s+?</g, '><').replace(/\r?\n/g, '\\n') + '\')'
+    contents += EOL + 'return ' + _.template(fileContents, {'variable': 'data'}).source
   } else {
     throw new gutil.PluginError(PLUGIN_NAME, 'Unknow file type: ' + vinylFiles.path)
   }

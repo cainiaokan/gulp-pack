@@ -1,4 +1,4 @@
-var _ = require('lodash')
+var _ = require('underscore')
 var fs = require('fs')
 var path = require('path')
 var gutil = require('gulp-util')
@@ -186,9 +186,7 @@ function conflict (moduleId, parentModuleId, isEntry) {
         // ignore the duplicate require
       } else {
         // remove the asynchronized dep
-        _.remove(oldParent.asyncDeps, function (id) {
-          return moduleId === id
-        })
+        oldParent.asyncDeps = _.without(oldParent.asyncDeps, moduleId)
         // add synchronized dep to current parent module.
         newParent.deps.push(moduleId)
         if (!config.silent) {
@@ -218,9 +216,11 @@ function conflict (moduleId, parentModuleId, isEntry) {
   }
 
   // get rid of this module from its current parent module.
-  _.remove(module.isEntry ? oldParent.asyncDeps : oldParent.deps, function (fp) {
-    return moduleId === fp
-  })
+  if (module.isEntry) {
+    oldParent.asyncDeps = _.without(oldParent.asyncDeps, moduleId)
+  } else {
+    oldParent.deps = _.without(oldParent.deps, moduleId)
+  }
 
   // transform the module into a synchronized dep.
   module.isEntry = false
